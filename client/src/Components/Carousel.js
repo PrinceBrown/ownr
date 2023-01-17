@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { RxTrackNext, RxTrackPrevious } from "react-icons/rx";
 import { gql } from 'apollo-boost';
-import {useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 
 
 
@@ -21,16 +21,15 @@ const GET_ANIMAL_CATEGORIES = gql`
 
 
 
-// const GET_ANIMAL_PHOTOS = gql`
-// query animal_photos($categoryId: Int!) {
-//     animal_photos(where: { category_id: { _eq: $categoryId } }) {
-//         id
-//         category_id
-//         photo_url
-//     }
-// }
-// `;
-
+const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
+    query  Animal_Photos_By_Category($categoryId: Int!) {
+        animal_photos_by_category(category_id: $categoryId) {
+            id
+            category_id
+            photo_url
+        }
+    }
+`;
 
 
 
@@ -47,21 +46,29 @@ function ImageCarousel() {
     const [categoryId, setCategoryId] = useState(1);
 
 
-    const { loading, error, data } = useQuery(GET_ANIMAL_CATEGORIES);
-
-    
-
-
-    // console.log("data", data )
+    const { loading, error, data } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, { variables: { categoryId } });
 
     if (loading) return <p>Loading....</p>
     if (error) return <p>Something went wrong :(</p>
 
 
 
-    const images = ["https://founded.media/hiring/photos/cats/14157413946_fea785b4d6_k.jpg",
-        "https://founded.media/hiring/photos/cats/16175483119_bd7374d8a8_h.jpg",
-        "https://founded.media/hiring/photos/cats/13901304865_a444cf4d34_k.jpg"];
+    // console.log("data", data.animal_photos_by_category)
+
+    //loop through data.animal_photos_by_category and return as an array of images
+
+    const images = data.animal_photos_by_category && data.animal_photos_by_category.map((photo) => photo.photo_url)
+
+    // console.log("images", imagesx)
+
+
+ 
+
+
+
+    // const images = ["https://founded.media/hiring/photos/cats/14157413946_fea785b4d6_k.jpg",
+    //     "https://founded.media/hiring/photos/cats/16175483119_bd7374d8a8_h.jpg",
+    //     "https://founded.media/hiring/photos/cats/13901304865_a444cf4d34_k.jpg"];
 
 
 
@@ -80,7 +87,7 @@ function ImageCarousel() {
     return (
         <>
 
-        {!loading && !error && (
+            {!loading && !error && (
                 <div>
 
                     <div className="mb-3">
@@ -97,12 +104,12 @@ function ImageCarousel() {
 
 
 
-                      <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
+                    <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
                         {data.animal_categories && data.animal_categories.map((category, index) => (
                             <button className="btn mx-3" key={index}>{category.category}</button>
                         ))}
-                    
-                    </div> 
+
+                    </div>
 
 
 
@@ -127,8 +134,8 @@ function ImageCarousel() {
                                 alt="carousel of animals"
                             />
                         </div>
-                     
-                       
+
+
 
 
 
@@ -142,12 +149,12 @@ function ImageCarousel() {
 
                 </div>
 
-        )}
+            )}
 
-        
-        
+
+
         </>
-   
+
     );
 }
 

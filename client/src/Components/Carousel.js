@@ -9,6 +9,8 @@ import { useQuery } from '@apollo/client'
 
 
 
+
+
 const GET_ANIMAL_CATEGORIES = gql`
     query Animals_Categories  {
         animal_categories {
@@ -37,42 +39,40 @@ const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
 
 
 
+export function useAnimalPhotosByCategory(categoryId) {
+    const { data, loading, error } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, {
+        variables: { categoryId },
+    });
+
+    return { data, loading, error };
+}
+
+
+
+
 function ImageCarousel() {
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
-    // const { loading, error, data } = useQuery(GET_ANIMAL_CATEGORIES)
-
     const [categoryId, setCategoryId] = useState(1);
 
-
-    const { loading, error, data } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, { variables: { categoryId } });
-
-    if (loading) return <p>Loading....</p>
-    if (error) return <p>Something went wrong :(</p>
+    console.log("categoryId", categoryId)
 
 
+    const { data: categoryData, loading: categoryLoading, error: categoryError } = useQuery(GET_ANIMAL_CATEGORIES);
+    // const { data: photoData, loading: photoLoading, error: photoError } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, { variables: { categoryId: categoryId },});
+    const { data: photoData, loading: photoLoading, error: photoError } = useAnimalPhotosByCategory(categoryId);
 
-    // console.log("data", data.animal_photos_by_category)
 
-    //loop through data.animal_photos_by_category and return as an array of images
-
-    const images = data.animal_photos_by_category && data.animal_photos_by_category.map((photo) => photo.photo_url)
-
-    // console.log("images", imagesx)
-
+   
+    
+    if (categoryLoading || photoLoading) return <p>Loading...</p>;
+    if (categoryError || photoError) return <p>Error</p>;
 
  
 
-
-
-    // const images = ["https://founded.media/hiring/photos/cats/14157413946_fea785b4d6_k.jpg",
-    //     "https://founded.media/hiring/photos/cats/16175483119_bd7374d8a8_h.jpg",
-    //     "https://founded.media/hiring/photos/cats/13901304865_a444cf4d34_k.jpg"];
-
-
-
-
+    const images = photoData.animal_photos_by_category && photoData.animal_photos_by_category.map((photo) => photo.photo_url)
+ 
 
     function handleNext() {
         setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
@@ -83,11 +83,17 @@ function ImageCarousel() {
     }
 
 
+    function handleCategoryChange(categoryId) {
+        setCategoryId(parseInt(categoryId));
+        setCurrentIndex(0);
+    }
+
+
 
     return (
         <>
 
-            {!loading && !error && (
+            {!categoryLoading && !photoLoading && !categoryError && !photoError && (
                 <div>
 
                     <div className="mb-3">
@@ -105,8 +111,8 @@ function ImageCarousel() {
 
 
                     <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
-                        {data.animal_categories && data.animal_categories.map((category, index) => (
-                            <button className="btn mx-3" key={index}>{category.category}</button>
+                        { categoryData.animal_categories &&  categoryData.animal_categories.map((category, index) => (
+                            <button onClick={() => handleCategoryChange(category.id)} className="btn mx-3" key={index}>{category.category} {category.id}</button>
                         ))}
 
                     </div>

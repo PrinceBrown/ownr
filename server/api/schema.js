@@ -29,11 +29,28 @@ const Animal_Photos_Type = new GraphQLObjectType({
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
+    
     animal_categories: {
       type: new GraphQLList(Animals_Categories_Type),
       async resolve(parent, args, context) {
         try {
           const result = await context.pool.query('SELECT * FROM animal_categories');
+          return result.rows;
+        } catch (error) {
+          console.error(error);
+          throw new Error('Error fetching animal categories from the database'); // return an empty array as a default value
+        }
+      },
+    },
+
+    animal_photos_by_category: {
+      type: new GraphQLList(Animal_Photos_Type),
+      args: {
+        category_id: { type: GraphQLInt },
+      },
+      async resolve(parent, args, context) {
+        try {
+          const result = await context.pool.query('SELECT * FROM animal_photos WHERE category_id = $1', [args.category_id]);
           return result.rows;
         } catch (error) {
           console.error(error);

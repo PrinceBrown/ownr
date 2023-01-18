@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable no-mixed-operators */
+import React, { useState } from "react";
 import { RxTrackNext, RxTrackPrevious } from "react-icons/rx";
-import { gql } from 'apollo-boost';
-import { useQuery } from '@apollo/client'
+import useSwr from "swr";
 
 
 
@@ -9,29 +9,27 @@ import { useQuery } from '@apollo/client'
 
 
 
+// const GET_ANIMAL_CATEGORIES = gql`
+//     query Animals_Categories  {
+//         animal_categories {
+//             id
+//             category
+//         }
+//     }
 
-
-const GET_ANIMAL_CATEGORIES = gql`
-    query Animals_Categories  {
-        animal_categories {
-            id
-            category
-        }
-    }
-
-`;
+// `;
 
 
 
-const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
-    query  Animal_Photos_By_Category($categoryId: Int!) {
-        animal_photos_by_category(category_id: $categoryId) {
-            id
-            category_id
-            photo_url
-        }
-    }
-`;
+// const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
+//     query  Animal_Photos_By_Category($categoryId: Int!) {
+//         animal_photos_by_category(category_id: $categoryId) {
+//             id
+//             category_id
+//             photo_url
+//         }
+//     }
+// `;
 
 
 
@@ -39,17 +37,13 @@ const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
 
 
 
-export function useAnimalPhotosByCategory(categoryId) {
-    const { data, loading, error } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, {
-        variables: { categoryId },
-    });
+// export function useAnimalPhotosByCategory(categoryId) {
+//     const { data, loading, error } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, {
+//         variables: { categoryId },
+//     });
 
-    return { data, loading, error };
-}
-
-
-
-
+//     return { data, loading, error };
+// }
 
 
 
@@ -62,11 +56,22 @@ export function useAnimalPhotosByCategory(categoryId) {
 
 
 
+
+
+
+const fetcher = (url) => fetch(url).then((r) => r.json());
+
+const URI = "http://localhost:8500/api";
+const getAnimalsCategories = "/all-categories"
+const getAnimalPhotosByCategory = "/animals-categories/"
+ 
 
 
 
 
 function ImageCarousel() {
+
+
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -74,42 +79,41 @@ function ImageCarousel() {
     // const [images, setImages] = useState([]);
 
 
-    
+
 
     console.log("categoryId", categoryId)
 
 
 
-    
 
 
 
-    const { data: categoryData, loading: categoryLoading, error: categoryError } = useQuery(GET_ANIMAL_CATEGORIES);
-    // const { data: photoData, loading: photoLoading, error: photoError } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, { variables: { categoryId: categoryId },});
-    const { data: photoData, loading: photoLoading, error: photoError } = useAnimalPhotosByCategory(categoryId);
 
-
- 
+    const { data: categoryData, loading: categoryLoading, error: categoryError } = useSwr(URI+getAnimalsCategories, fetcher);
+    const { data: photoData, loading: photoLoading, error: photoError } = useSwr(URI +getAnimalPhotosByCategory+categoryId, fetcher);
 
 
 
-    
+
+
+
+
 
     if (categoryLoading || photoLoading) return <p>Loading...</p>;
     if (categoryError || photoError) return <p>Error</p>;
 
-    
-
-    const images = photoData.animal_photos_by_category && photoData.animal_photos_by_category.map((photo) => photo.photo_url)
-  
-    
-
-    
+    console.log("categoryData", categoryData && categoryData.animal_categories)
+ 
+    const images = photoData && photoData.animalsByCategory.map((photo) => photo.photo_url) || [];
 
 
 
 
-    
+
+
+
+
+
     function handleNext() {
         setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
     }
@@ -118,11 +122,11 @@ function ImageCarousel() {
         setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
     }
 
- 
+
 
     //save the image in a state variable and then filter the images based on the category id
- 
-    
+
+
 
 
 
@@ -142,9 +146,9 @@ function ImageCarousel() {
     }
 
 
-    
-    
-  
+
+
+
 
     return (
         <>
@@ -165,9 +169,9 @@ function ImageCarousel() {
 
 
 
-
+ 
                     <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
-                        {categoryData.animal_categories && categoryData.animal_categories.map((category, index) => (
+                        {categoryData && categoryData.animal_categories.map((category, index) => (
                             <button
                                 onClick={() => handleCategoryChange(category.id)}
                                 className={`btn mx-3 ${parseInt(category.id) === categoryId ? 'btn-primary' : ''}`}
@@ -177,7 +181,7 @@ function ImageCarousel() {
                             </button>
                         ))}
 
-                    </div>
+                    </div>      
 
 
 
@@ -196,13 +200,13 @@ function ImageCarousel() {
                         <div className=" mx-4" >
 
                             {/* One way we can prevent layout shift by setting fixed width and height */}
-                              <img
+                            <img
                                 className="rounded shadow-lg shadow-base-400 w-full h-full object-contain"
                                 src={images[currentIndex]}
                                 alt="carousel of animals"
-                            />  
+                            />
 
-                          
+
                         </div>
 
 

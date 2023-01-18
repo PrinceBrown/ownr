@@ -1,5 +1,5 @@
 /* eslint-disable no-mixed-operators */
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RxTrackNext, RxTrackPrevious } from "react-icons/rx";
 import useSwr from "swr";
 
@@ -7,46 +7,7 @@ import useSwr from "swr";
 
 
 
-
-
-// const GET_ANIMAL_CATEGORIES = gql`
-//     query Animals_Categories  {
-//         animal_categories {
-//             id
-//             category
-//         }
-//     }
-
-// `;
-
-
-
-// const GET_ANIMAL_PHOTOS_BY_CATEGORY = gql`
-//     query  Animal_Photos_By_Category($categoryId: Int!) {
-//         animal_photos_by_category(category_id: $categoryId) {
-//             id
-//             category_id
-//             photo_url
-//         }
-//     }
-// `;
-
-
-
-
-
-
-
-// export function useAnimalPhotosByCategory(categoryId) {
-//     const { data, loading, error } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, {
-//         variables: { categoryId },
-//     });
-
-//     return { data, loading, error };
-// }
-
-
-
+ 
 
 
 
@@ -78,23 +39,40 @@ function ImageCarousel() {
     const [categoryId, setCategoryId] = useState(1);
     const [selectedCategories, setSelectedCategories] = useState([1]);
 
+    const [currentImage, setCurrentImage] = useState(null);
+    const [images, setImages] = useState([]);
 
-
-
-    console.log("categoryId", categoryId)
-
-
-
-
-
-
-
+    
+    
+    
     const { data: categoryData, loading: categoryLoading, error: categoryError } = useSwr(URI+getAnimalsCategories, fetcher);
     const { data: photoData, loading: photoLoading, error: photoError } = useSwr(URI +getAnimalPhotosByCategory+categoryId, fetcher);
+    
+    console.log("categoryId", categoryId)
+    
+    
+    
 
+    
+    
+//    images = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || [];
+    
+    useEffect(() => {
+        if (images && images.length > 0) {
+            setCurrentImage(getRandomImage());
+        }
+    }, [images]);
 
+ 
+    useEffect(() => {
+        setImages(photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || []);
+    }, [photoData, selectedCategories])
 
-
+    useEffect(() => {
+        if (images && images.length > 0) {
+            setCurrentImage(getRandomImage());
+        }
+    }, [images]);
 
 
 
@@ -104,12 +82,11 @@ function ImageCarousel() {
 
     console.log("categoryData", categoryData && categoryData.animal_categories)
  
-    const images = photoData && photoData.animalsByCategory.map((photo) => photo.photo_url) || [];
-
-    // const images = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || [];
 
 
 
+    console.log("images", images)
+ 
 
 
 
@@ -117,20 +94,20 @@ function ImageCarousel() {
 
 
     function handleNext() {
-        setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
+        if (images) {
+            setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
+            setCurrentImage(getRandomImage());
+        }
     }
 
     function handlePrevious() {
-        setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
+        if (images) {
+            setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
+        }
     }
 
 
-
-    //save the image in a state variable and then filter the images based on the category id
-
-
-
-
+  
 
     function handleCategoryChange(_categoryId) {
         setCategoryId(parseInt(_categoryId));
@@ -138,24 +115,37 @@ function ImageCarousel() {
         handleToggleCategory(_categoryId)
     }
 
-
-    function handleToggleCategory(_categoryId) {
-    }
-
-
-    function handleCategoryChange(_categoryId) {
-        setCategoryId(parseInt(_categoryId));
-        setCurrentIndex(0);
-        handleToggleCategory(_categoryId)
-    }
-
+ 
     function handleToggleCategory(_categoryId) {
         if (selectedCategories.includes(_categoryId)) {
             setSelectedCategories(selectedCategories.filter(id => id !== _categoryId));
         } else {
             setSelectedCategories([...selectedCategories, _categoryId]);
         }
+        const newImages = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url);
+        setImages([...images, ...newImages]);
+
+        shuffle(images);
     }
+
+
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+
+    function getRandomImage() {
+        if (images) {
+            const randomIndex = Math.floor(Math.random() * images.length);
+            return images[randomIndex];
+        }
+    }
+
 
 
 
@@ -217,11 +207,20 @@ function ImageCarousel() {
                         <div className=" mx-4" >
 
                             {/* One way we can prevent layout shift by setting fixed width and height */}
-                            <img
+                            {/* <img
                                 className="rounded shadow-lg shadow-base-400 w-full h-full object-contain"
                                 src={images[currentIndex]}
                                 alt="carousel of animals"
-                            />
+                            /> */}
+                            {
+                                images &&
+                                images.length > 0 ? (
+                                    <img src={images[currentIndex]} alt={images[currentIndex]} />
+                                ) : (
+                                    <p>Loading...</p>
+                                )
+                            }
+
 
 
                         </div>

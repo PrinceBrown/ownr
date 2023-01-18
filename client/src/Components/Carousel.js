@@ -76,7 +76,7 @@ function ImageCarousel() {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [categoryId, setCategoryId] = useState(1);
-    // const [images, setImages] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState([1]);
 
 
 
@@ -105,6 +105,8 @@ function ImageCarousel() {
     console.log("categoryData", categoryData && categoryData.animal_categories)
  
     const images = photoData && photoData.animalsByCategory.map((photo) => photo.photo_url) || [];
+
+    // const images = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || [];
 
 
 
@@ -138,13 +140,22 @@ function ImageCarousel() {
 
 
     function handleToggleCategory(_categoryId) {
-        // if (toggledCategories.includes(_categoryId)) {
-        //     setToggledCategories(toggledCategories.filter(id => id !== _categoryId));
-        // } else {
-        //     setToggledCategories([...toggledCategories, _categoryId]);
-        // }
     }
 
+
+    function handleCategoryChange(_categoryId) {
+        setCategoryId(parseInt(_categoryId));
+        setCurrentIndex(0);
+        handleToggleCategory(_categoryId)
+    }
+
+    function handleToggleCategory(_categoryId) {
+        if (selectedCategories.includes(_categoryId)) {
+            setSelectedCategories(selectedCategories.filter(id => id !== _categoryId));
+        } else {
+            setSelectedCategories([...selectedCategories, _categoryId]);
+        }
+    }
 
 
 
@@ -171,7 +182,7 @@ function ImageCarousel() {
 
  
                     <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
-                        {categoryData && categoryData.animal_categories.map((category, index) => (
+                       {/* {categoryData && categoryData.animal_categories.map((category, index) => (
                             <button
                                 onClick={() => handleCategoryChange(category.id)}
                                 className={`btn mx-3 ${parseInt(category.id) === categoryId ? 'btn-primary' : ''}`}
@@ -179,7 +190,13 @@ function ImageCarousel() {
                             >
                                 {category.category} {category.id}
                             </button>
-                        ))}
+                        ))}  */}
+
+                        <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
+                            {categoryData && categoryData.animal_categories.map((category, index) => (
+                                <button onClick={() => handleCategoryChange(category.id)} className={`btn mx-3 ${selectedCategories.includes(category.id) ? 'btn-primary' : ''}`} key={index}>{category.category}</button>
+                            ))}
+                        </div>
 
                     </div>      
 

@@ -3,14 +3,15 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/db');
 
-router.get('/all-categories', (req, res) => {
-  pool.query('SELECT * FROM animal_categories', (err, result) => {
-    if (!err) {
-      res.json({ animal_categories: result.rows });
-    } else {
-      console.log({ err });
-    }
-  });
+router.get('/all-categories', async (req, res) => {
+  console.log("Here--------")
+  try {
+    const result = await pool.query('SELECT * FROM animal_categories');
+    console.log(result.rows)
+    return res.json({ animal_categories: result.rows });
+  } catch (error) {
+    throw new Error('Error fetching animal categories from the database', error); // return an empty array as a default value
+  }
 });
 
 router.get('/animals-categories/:category_id', async (req, res) => {
@@ -30,7 +31,5 @@ router.get('/animal-photos', async (req, res) => {
     throw new Error('Error fetching animal categories from the database', error); // return an empty array as a default value
   }
 });
-
- 
 
 module.exports = router;

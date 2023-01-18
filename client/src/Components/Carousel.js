@@ -121,24 +121,30 @@ function ImageCarousel() {
   
 
     function handleCategoryChange(_categoryId) {
-        setPreviousImages([...images]);
         setCategoryId(parseInt(_categoryId));
         setCurrentIndex(0);
-        handleToggleCategory(_categoryId)
+        handleToggleCategory(_categoryId);
     }
 
- 
+
+  
     function handleToggleCategory(_categoryId) {
         if (selectedCategories.includes(_categoryId)) {
             setSelectedCategories(selectedCategories.filter(id => id !== _categoryId));
         } else {
             setSelectedCategories([...selectedCategories, _categoryId]);
         }
-        const newImages = photoData && photoData.animalsByCategory.filter(photo => _categoryId == photo.category_id).map((photo) => photo.photo_url) || []
-        setImages([...previousImages, ...newImages]);
+        const newImages = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url);
+        setImages([...images, ...newImages.filter((image) => !images.includes(image))]);
         shuffle(images);
+        setIsPreviousSelection(false);
     }
+   
 
+    function handlePreviousSelection() {
+        setSelectedCategories(previousSelection);
+        setIsPreviousSelection(true);
+    }
 
 
 
@@ -151,13 +157,13 @@ function ImageCarousel() {
         return array;
     }
 
-
     function getRandomImage() {
         if (images) {
             const randomIndex = Math.floor(Math.random() * images.length);
             return images[randomIndex];
         }
     }
+
 
 
 
@@ -185,33 +191,10 @@ function ImageCarousel() {
 
  
                     <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
-                       {/* {categoryData && categoryData.animal_categories.map((category, index) => (
-                            <button
-                                onClick={() => handleCategoryChange(category.id)}
-                                className={`btn mx-3 ${parseInt(category.id) === categoryId ? 'btn-primary' : ''}`}
-                                key={index}
-                            >
-                                {category.category} {category.id}
-                            </button>
-                        ))}  */}
-
-                        <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
-                            {categoryData && categoryData.animal_categories.map((category, index) => (
-                                <button onClick={() => {
-                                    handleCategoryChange(category.id)
-                                    if (isPreviousSelection) {
-                                        setSelectedCategories(previousSelection);
-                                        setIsPreviousSelection(false);
-                                    } else {
-                                        setPreviousSelection(selectedCategories);
-                                        setSelectedCategories([category.id]);
-                                        setIsPreviousSelection(true);
-                                    }
-                                }} className={`btn mx-3 ${selectedCategories.includes(category.id) ? 'btn-primary' : ''}`} key={index}>{category.category}</button>
-                            ))}
-                        </div>
-
-                    </div>      
+                        {categoryData && categoryData.animal_categories.map((category, index) => (
+                            <button onClick={() => handleCategoryChange(category.id)} className={`btn mx-3 ${selectedCategories.includes(category.id) ? 'btn-primary' : ''}`} key={index}>{category.category}</button>
+                        ))}
+                    </div>     
 
 
 

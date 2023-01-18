@@ -26,6 +26,9 @@ const Animal_Photos_Type = new GraphQLObjectType({
   }),
 });
 
+
+
+
 const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   fields: {
@@ -73,6 +76,8 @@ const RootQuery = new GraphQLObjectType({
     },
   },
 });
+
+
 
 // Mutations
 const Mutation = new GraphQLObjectType({

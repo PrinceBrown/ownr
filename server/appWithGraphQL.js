@@ -3,12 +3,14 @@ const express = require('express');
 
 const app = express();
 const cors = require('cors');
+const { graphqlHTTP } = require('express-graphql');
+const colors = require('colors');
 
-// const expressWinston = require('express-winston');
+const expressWinston = require('express-winston');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const apiSchema = require('./api/schema');
 
-const mainRoute = require('./routes/main');
 
 const authRouter = require('./routes/auth');
 const { pool, checkTableExists, createTables } = require('./config/db');
@@ -16,7 +18,7 @@ const { pool, checkTableExists, createTables } = require('./config/db');
 const createApp = (logger) => {
   app.use(cors());
 
-  // console.log('Process.ENV...'.yellow, process.env.NODE_ENV);
+  console.log('Process.ENV...'.yellow, process.env.NODE_ENV);
 
   app.use(async (req, res, next) => {
     try {
@@ -35,7 +37,7 @@ const createApp = (logger) => {
     }
   });
 
-  // app.use(expressWinston.logger({ winstonInstance: logger }));
+  app.use(expressWinston.logger({ winstonInstance: logger }));
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
@@ -46,8 +48,16 @@ const createApp = (logger) => {
 
   app.use('/auth', authRouter);
 
- 
-  app.use('/api', mainRoute);
+  app.use(
+    '/graphql',
+    graphqlHTTP({
+      schema: apiSchema,
+      graphiql: process.env.NODE_ENV === 'development',
+    }),
+  );
+
+
+
 
   // catch 404 and forward to error handler
   app.use((req, res) => {

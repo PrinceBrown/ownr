@@ -1,0 +1,110 @@
+<%-include ("../includes/head.ejs")%>
+
+    <body>
+
+
+        <%-include ("../includes/navigation.ejs")%>
+
+
+
+            <div class="text-center">
+                <input id="photo_url" type="text" placeholder="Add URL"
+                    class="input input-bordered input-info w-full max-w-xs" required />
+                <input id="category_id" value="<%=category_id%>" type="text" placeholder="Add New Animal"
+                    class="input input-bordered input-info w-full max-w-xs" required hidden />
+                <button onclick="addNewPhoto()" class="btn btn-primary">ADD</button>
+            </div>
+
+            <div class="container mx-auto mt-10">
+
+
+
+
+                <div class="grid grid-cols-3 gap-5">
+                    <% animalsByCategory.forEach(data=> { %>
+
+                        <div class="card card-compact w-96 bg-base-100 shadow-xl">
+                            <figure><img src="<%=data.photo_url%>" alt="Shoes" /></figure>
+                            <div class="card-body">
+                                <span id="category_id">Category ID: <%=data.category_id%></span>
+                                <p>Image ID: <%=data.id%>
+                                </p>
+                                <div class="card-actions justify-end">
+                                    <button onclick="deleteAnimal('<%=data.id%>')"
+                                        class="btn btn-danger">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                        <% }) %>
+
+
+
+                </div>
+            </div>
+
+
+
+            <script>
+
+                const category_id = document.getElementById('category_id').value;
+
+                const addNewPhoto = async () => {
+
+                    const photo_url = document.getElementById('photo_url').value;
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/admin/add-photos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            photo_url,
+                            category_id,
+                            token
+                        })
+                    });
+
+                    const data = await response.json();
+                    console.log(data);
+                    if (data.status === 'success') {
+                        window.location.href = `/admin/animals/${category_id}/${localStorage.getItem('token')}`;
+                    }
+                };
+
+
+
+
+                const deleteAnimal = async (animal_id) => {
+
+                    //make a request to delete the animal
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/admin/delete-photos', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            animal_id,
+                            token
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    console.log("data", data)
+
+                    if (data.status === 'success') {
+                        window.location.href = `/admin/animals/${category_id}/${localStorage.getItem('token')}`;
+                    }
+
+
+                };
+
+
+
+
+            </script>
+
+    </body>
+
+    </html>

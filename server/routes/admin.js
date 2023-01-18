@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const express = require('express');
 
 const router = express.Router();
@@ -6,9 +7,9 @@ const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 
 // PROTECTED ROUTES MIDDLEWARE-------------------------------
-// Ensure is Authenticated Middleware
-const { ensureAuthenticated } = require('../config/auth/admin-auth');
-const { authenticate } = require('../config/auth/authWithJWT');
+// // Ensure is Authenticated Middleware
+// const { ensureAuthenticated } = require('../config/auth/admin-auth');
+// const { authenticate } = require('../config/auth/authWithJWT');
 
 const SECRET_KEY = 'yoursecretkey';
 const tokenCreator = (user) => jwt.sign({ user }, SECRET_KEY, { expiresIn: '1h' });
@@ -35,30 +36,33 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   console.log('hitting the backend email', email.trim());
-  // Verify user's credentials
 
+  // Check if user exists
   const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.trim()]);
-  console.log('result.rows[0]', result.rows);
   const user = result.rows[0];
 
-  // Match password
-  // bcrypt.compare(password, user.password, (err, isMatch) => {
-  //   if (err) throw err;
+  if (user) {
+    // Match password
+    // bcrypt.compare(password, user.password, (err, isMatch) => {
+    //   if (err) throw err;
 
-  //   if (isMatch) {
-  //     return done(null, user);
-  //   }
-  //   return done(null, false, {
-  //     message: 'Password or email is incorrect',
-  //   })
-  //     .catch((err) => {
-  //       if (err) throw err;
-  //     });
-  // });
+    //   if (isMatch) {
+    //     return done(null, user);
+    //   }
+    //   return done(null, false, {
+    //     message: 'Password or email is incorrect',
+    //   })
+    //     .catch((err) => {
+    //       if (err) throw err;
+    //     });
+    // });
 
-  // Generate token
+    // Generate token
+    const token = tokenCreator(user);
+    return res.json({ token });
+  }
 
-  res.json({ token: tokenCreator(user) });
+  return res.status(400).json({ error: "You don't have an account" });
 });
 
 // Sign up Route
@@ -112,19 +116,100 @@ router.get('/logout', (req, res, next) => {
 
 // ----------------------------------------------------------------------------------
 
-router.post('/create-category', verifyToken, async (req, res) => {
+router.get('/dashboard/:token', async (req, res) => {
+  const { token } = req.params;
+  if (!token) return res.status(401).send('Access denied. No token provided.');
+
+  console.log('The token is', token);
+
   try {
-    const result = await pool.query('INSERT INTO animal_categories (category) VALUES ($1) RETURNING *', [req.body.category]);
-    return res.json({ categoryCreated: result.rows[0] });
+    const verified = jwt.verify(token, SECRET_KEY);
+    req.user = verified;
+
+    if (verified) {
+      try {
+        const result = await pool.query('SELECT * FROM animal_categories');
+        return res.status(200).render('admin/dashboard', { animalCategories: result.rows });
+      } catch (error) {
+        throw new Error('Error fetching animal categories from the database'); // return an empty array as a default value
+      }
+    }
+  } catch (err) {
+    res.status(400).send('Invalid token.');
+  }
+
+  console.log('hitting the dashboard route');
+
+  // return res.status(200).json({ title: 'Dashboard' });
+});
+
+router.get('/animals/:category_id/:token', async (req, res) => {
+  const { category_id, token } = req.params;
+
+  console.log("params",req.params)
+  console.log(req.url)
+  if (!token) return res.status(401).send('Access denied. No token provided.');
+
+  // console.log('The token is', token);
+ 
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    req.user = verified;
+
+    if (verified) {
+      try {
+        const result = await pool.query('SELECT * FROM animal_photos WHERE category_id = $1', [category_id]);
+        return res.status(200).render('admin/animals', { animalsByCategory: result.rows, category_id });
+      } catch (error) {
+        throw new Error('Error fetching animal categories from the database', error); // return an empty array as a default value
+      }
+    }
+  } catch (err) {
+    res.status(400).send('Invalid token.');
+  }
+});
+
+router.post('/create-category', async (req, res) => {
+  const { category, token } = req.body;
+
+  if (!token) return res.status(401).send('Access denied. No token provided.');
+
+  console.log('The token is', `${token} and the category is`, category);
+
+  try {
+    const result = await pool.query('INSERT INTO animal_categories (category) VALUES ($1) RETURNING *', [category]);
+    return res.status(200).json({ status: 'success' });
   } catch (error) {
     throw new Error('Error fetching animal categories from the database', error); // return an empty array as a default value
   }
 });
 
-router.post('/add-photos', verifyToken, async (req, res) => {
+
+
+router.post('/add-photos', async (req, res) => {
+  const { category_id, photo_url, token } = req.body;
+
+  if (!token) return res.status(401).send('Access denied. No token provided.');
+
+  console.log('The token is', `${token} and the category is`, category_id, photo_url);
   try {
-    const result = await pool.query('INSERT INTO animal_photos (category_id, photo_url) VALUES ($1, $2) RETURNING *', [req.body.category_id, req.body.photo_url]);
-    return res.json({ animalPhotos: result.rows[0] });
+    const result = await pool.query('INSERT INTO animal_photos (category_id, photo_url) VALUES ($1, $2) RETURNING *', [category_id, photo_url]);
+    return res.status(200).json({ status: 'success' });
+  } catch (error) {
+    throw new Error('Error fetching animal categories from the database'); // return an empty array as a default value
+  }
+});
+
+router.delete('/delete-photos', async (req, res) => {
+  const { animal_id, token } = req.body;
+
+  if (!token) return res.status(401).send('Access denied. No token provided.');
+
+  console.log('\n\n\n\n\n\n\n\n Deleteing', `  and the animalID is`, animal_id);
+  try {
+    const result = await pool.query('DELETE FROM animal_photos WHERE id = $1', [animal_id]);
+    return res.status(200).json({ status: 'success' });
   } catch (error) {
     throw new Error('Error fetching animal categories from the database'); // return an empty array as a default value
   }

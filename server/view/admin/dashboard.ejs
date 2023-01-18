@@ -1,0 +1,69 @@
+<%-include ("../includes/head.ejs")%>
+
+    <body>
+
+
+        <%-include ("../includes/navigation.ejs")%>
+
+
+
+        <div class="text-center">
+            <input type="text" placeholder="Add New Category" class="input input-bordered input-info w-full max-w-xs" /> 
+            <button onclick="addNewCategory()" class="btn btn-primary">ADD</button>
+        </div>
+
+        <div class="text-center mt-10">
+            <ul>
+                <% animalCategories.forEach(data => { %>
+                <li onclick="goToAnimal('<%=data.id%>')" class="flex  justify-center  mb-10 hover:bg-yellow-500 cursor-pointer">
+                    <span id="category_id"><%=data.id%></span>
+                    <h2 class="border-b inline-block text-5xl mr-2 capitalize"><%=data.category%></h2>
+                    <img width="50px" height="50px" src="https://cdn-icons-png.flaticon.com/512/1250/1250699.png" alt="">
+                </li>
+                <% }) %>
+                
+ 
+               
+            </ul>
+        </div>
+        
+
+
+    <script>
+
+
+const addNewCategory = async () => {
+            const category = document.querySelector('input').value;
+            const token = localStorage.getItem('token');
+            const response = await fetch('/admin/create-category', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    category,
+                    token
+                })
+            });
+
+            const data = await response.json();
+            console.log(data);
+            if (data.status === 'success') {
+                window.location.href = `/admin/dashboard/${localStorage.getItem('token')}`;
+            }
+        };
+
+
+        const goToAnimal = async (category_id) => {
+            window.location.href = `/admin/animals/${category_id}/${localStorage.getItem('token')}`;
+ 
+        };
+
+
+
+
+    </script>
+
+</body>
+
+</html>

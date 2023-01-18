@@ -68,8 +68,14 @@
                     const userData = await results.json();
 
                     console.log('userData', userData)
+                    
+                    if(userData.error){
+                        alert(userData.error)
+                        return;
+                    }
+
                     localStorage.setItem('token', userData.token);
-                    window.location.href = '/admin/dashboard';
+                    window.location.href = `/admin/dashboard/${userData.token}`;
 
                 } catch (error) {
                     if (error) {

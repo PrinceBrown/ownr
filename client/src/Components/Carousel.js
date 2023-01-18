@@ -39,11 +39,11 @@ function ImageCarousel() {
     const [categoryId, setCategoryId] = useState(1);
     const [selectedCategories, setSelectedCategories] = useState([1]);
     
-    const [previousSelection, setPreviousSelection] = useState(selectedCategories);
     const [currentImage, setCurrentImage] = useState(null);
+    
     const [previousImages, setPreviousImages] = useState([]);
     const [images, setImages] = useState([]);
-    const [isPreviousSelection, setIsPreviousSelection] = useState(false);
+
 
 
     
@@ -52,19 +52,13 @@ function ImageCarousel() {
     const { data: categoryData, loading: categoryLoading, error: categoryError } = useSwr(URI+getAnimalsCategories, fetcher);
     const { data: photoData, loading: photoLoading, error: photoError } = useSwr(URI +getAnimalPhotosByCategory+categoryId, fetcher);
     
-    console.log("categoryId", categoryId)
+    useEffect(() => {
+      console.log("!!!!!!! - previousImages", previousImages)
+        console.log("!!!!! -images", images)
+    }, [categoryId])
     
     
-    useEffect(() => {
-        setPreviousImages([]);
-    }, [images]);
-
-
-
-    useEffect(() => {
-        setPreviousSelection(selectedCategories);
-    }, [selectedCategories]);
-
+    
     
 //    images = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || [];
     
@@ -77,27 +71,17 @@ function ImageCarousel() {
  
     useEffect(() => {
         setImages(photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url) || []);
-    }, [photoData, selectedCategories])
-
-    useEffect(() => {
-        if (images && images.length > 0) {
-            setCurrentImage(getRandomImage());
-        }
-    }, [images]);
-
+    }, [photoData, selectedCategories, previousImages])
+ 
 
 
 
     if (categoryLoading || photoLoading) return <p>Loading...</p>;
-    if (categoryError || photoError) return <p>Error</p>;
+    if (categoryError || photoError) return <p>Something happened :(</p>;
 
     console.log("categoryData", categoryData && categoryData.animal_categories)
  
 
-
-
-    console.log("images", images)
- 
 
 
 
@@ -132,19 +116,31 @@ function ImageCarousel() {
         if (selectedCategories.includes(_categoryId)) {
             setSelectedCategories(selectedCategories.filter(id => id !== _categoryId));
         } else {
+            const oldImages = images;
             setSelectedCategories([...selectedCategories, _categoryId]);
+            setPreviousImages(oldImages);
         }
-        const newImages = photoData && photoData.animalsByCategory.filter(photo => selectedCategories.includes(photo.category_id)).map((photo) => photo.photo_url);
-        setImages([...images, ...newImages.filter((image) => !images.includes(image))]);
         shuffle(images);
-        setIsPreviousSelection(false);
     }
-   
+ 
 
-    function handlePreviousSelection() {
-        setSelectedCategories(previousSelection);
-        setIsPreviousSelection(true);
-    }
+    // function handleToggleCategory(_categoryId) {
+    //     const oldSelection = selectedCategories;
+    //     if (selectedCategories.includes(_categoryId)) {
+    //         setSelectedCategories(selectedCategories.filter(id => id !== _categoryId));
+    //     } else {
+    //         setSelectedCategories([...selectedCategories, _categoryId]);
+    //         setPreviousImages(images);
+    //     }
+    //     const newImages = photoData && photoData.animalsByCategory.filter(photo => oldSelection.includes(photo.category_id)).map((photo) => photo.photo_url);
+
+    //     // setImages([...images, ...newImages]);
+    //     setImages([...previousImages, ...newImages]);
+
+
+    //     shuffle(images);
+    // }
+
 
 
 
@@ -189,12 +185,18 @@ function ImageCarousel() {
 
 
 
- 
-                    <div className="py-5 flex items-center justify-center overflow-x-auto white-space-nowrap" style={{ overflowX: 'auto' }}>
+
+                    <div className="relative container "  >
+
+                        <div className="py-5 flex overflow-x-auto" style={{width: '100vw'}} >
                         {categoryData && categoryData.animal_categories.map((category, index) => (
-                            <button onClick={() => handleCategoryChange(category.id)} className={`btn mx-3 ${selectedCategories.includes(category.id) ? 'btn-primary' : ''}`} key={index}>{category.category}</button>
+                            category.category && <button onClick={() => handleCategoryChange(category.id)} className={`btn mx-3 ${selectedCategories.includes(category.id) ? 'btn-primary' : ''}`} key={index}>{category.category}</button>
                         ))}
                     </div>     
+                </div>
+ 
+
+                    
 
 
 
@@ -210,22 +212,11 @@ function ImageCarousel() {
                         </button>
 
 
-                        <div className=" mx-4" >
-
-                            {/* One way we can prevent layout shift by setting fixed width and height */}
-                            {/* <img
-                                className="rounded shadow-lg shadow-base-400 w-full h-full object-contain"
-                                src={images[currentIndex]}
-                                alt="carousel of animals"
-                            /> */}
+                  <div className=" mx-4" >
                             {currentImage && <img src={currentImage} alt={currentImage} />}
 
-
-
-                        </div>
-
-
-
+                        </div> 
+ 
 
 
 

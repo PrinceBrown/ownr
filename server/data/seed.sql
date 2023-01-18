@@ -1,4 +1,6 @@
  
+-- USERS
+INSERT INTO users(firstname, email, password) VALUES ('John Doe', 'test@test.com', 'password');
 
 -- CATEGORIES
 INSERT INTO animal_categories(category) VALUES ('cats');

@@ -8,6 +8,8 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   const token = AuthService.getToken();
 
+  console.log('token: ', token)
+
   res.send(token);
 });
 

@@ -10,4 +10,11 @@ CREATE TABLE animal_photos (
 );
 
 
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email text,
+    photo_url text
+);
+
+
 -- In addition, you will be add APIs that allow users to add or delete animal categories, updating the categories available in the UI. 

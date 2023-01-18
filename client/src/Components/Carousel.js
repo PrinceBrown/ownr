@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { RxTrackNext, RxTrackPrevious } from "react-icons/rx";
 import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/client'
@@ -50,18 +50,38 @@ export function useAnimalPhotosByCategory(categoryId) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function ImageCarousel() {
 
     const [currentIndex, setCurrentIndex] = useState(0);
 
     const [categoryId, setCategoryId] = useState(1);
+    // const [images, setImages] = useState([]);
 
-    const [selectedCategoryId, setSelectedCategoryId] = useState(1);
-    const [toggledCategories, setToggledCategories] = useState([]);
-    const [ximages, setxImages] = useState([]);
 
+    
 
     console.log("categoryId", categoryId)
+
+
+
+    
+
 
 
     const { data: categoryData, loading: categoryLoading, error: categoryError } = useQuery(GET_ANIMAL_CATEGORIES);
@@ -69,28 +89,27 @@ function ImageCarousel() {
     const { data: photoData, loading: photoLoading, error: photoError } = useAnimalPhotosByCategory(categoryId);
 
 
+ 
 
+
+
+    
 
     if (categoryLoading || photoLoading) return <p>Loading...</p>;
     if (categoryError || photoError) return <p>Error</p>;
 
-
+    
 
     const images = photoData.animal_photos_by_category && photoData.animal_photos_by_category.map((photo) => photo.photo_url)
+  
+    
 
-    console.log("images", images)
-    const filteredImages = photoData.animal_photos_by_category.filter(image => {
-        //return the images that are in the toggledCategories array
-        console.log("image.category_id", image.category_id)
-        console.log(toggledCategories.includes(image.category_id))
-    });
-    // toggledCategories.includes(image.categoryId)
-
-    console.log("toggleCategories", toggledCategories)
-
-    console.log("filteredImages", filteredImages)
+    
 
 
+
+
+    
     function handleNext() {
         setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
     }
@@ -99,65 +118,32 @@ function ImageCarousel() {
         setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
     }
 
-    // function handleCategoryChange(categoryId) {
-    //     setCategoryId(parseInt(categoryId));
-    //     setSelectedCategoryId(categoryId);
-    //     setCurrentIndex(0);
-    // }
-
+ 
 
     //save the image in a state variable and then filter the images based on the category id
-    // const [images, setImages] = useState([])
-    // const [filteredImages, setFilteredImages] = useState([])
-    // const [toggledCategories, setToggledCategories] = useState([])
-    // const [selectedCategoryId, setSelectedCategoryId] = useState
-    // const [categoryId, setCategoryId] = useState(1)
-
-    // const { data: categoryData, loading: categoryLoading, error: categoryError } = useQuery(GET_ANIMAL_CATEGORIES);
-    // const { data: photoData, loading: photoLoading, error: photoError } = useQuery(GET_ANIMAL_PHOTOS_BY_CATEGORY, { variables: { categoryId: categoryId
-    // },});
-
-    // if (categoryLoading || photoLoading) return <p>Loading...</p>;
-    // if (categoryError || photoError) return <p>Error</p>;
-
-    // const images = photoData.animal_photos_by_category && photoData.animal_photos_by_category.map((photo) => photo.photo_url)
-
-    // const filteredImages = images.filter(image => {
-    //     //return the images that are in the toggledCategories array
-    //     console.log("image.category_id", image.category_id)
-    //     console.log(toggledCategories.includes(image.category_id))
-    // });
-    // // toggledCategories.includes(image.categoryId)
-
-    // console.log("toggleCategories", toggledCategories)
-
-    // console.log("filteredImages", filteredImages)
-
-    // function handleNext() {
-    //     setCurrentIndex(currentIndex === images.length - 1 ? 0 : currentIndex + 1);
-    // }
-
-    // function handlePrevious() {
-    //     setCurrentIndex(currentIndex === 0 ? images.length - 1 : currentIndex - 1);
-    // }
+ 
+    
 
 
 
-
-    function handleCategoryChange(categoryId) {
-        setCategoryId(parseInt(categoryId));
-        setSelectedCategoryId(categoryId);
+    function handleCategoryChange(_categoryId) {
+        setCategoryId(parseInt(_categoryId));
         setCurrentIndex(0);
+        handleToggleCategory(_categoryId)
     }
 
-    function handleToggleCategory(categoryId) {
-        if (toggledCategories.includes(categoryId)) {
-            setToggledCategories(toggledCategories.filter((id) => id !== categoryId));
-        } else {
-            setToggledCategories([...toggledCategories, categoryId]);
-        }
+
+    function handleToggleCategory(_categoryId) {
+        // if (toggledCategories.includes(_categoryId)) {
+        //     setToggledCategories(toggledCategories.filter(id => id !== _categoryId));
+        // } else {
+        //     setToggledCategories([...toggledCategories, _categoryId]);
+        // }
     }
 
+
+    
+    
   
 
     return (
@@ -184,7 +170,7 @@ function ImageCarousel() {
                         {categoryData.animal_categories && categoryData.animal_categories.map((category, index) => (
                             <button
                                 onClick={() => handleCategoryChange(category.id)}
-                                className={`btn mx-3 ${category.id === selectedCategoryId ? 'btn-primary' : ''}`}
+                                className={`btn mx-3 ${parseInt(category.id) === categoryId ? 'btn-primary' : ''}`}
                                 key={index}
                             >
                                 {category.category} {category.id}
@@ -210,11 +196,13 @@ function ImageCarousel() {
                         <div className=" mx-4" >
 
                             {/* One way we can prevent layout shift by setting fixed width and height */}
-                            <img
+                              <img
                                 className="rounded shadow-lg shadow-base-400 w-full h-full object-contain"
                                 src={images[currentIndex]}
                                 alt="carousel of animals"
-                            />
+                            />  
+
+                          
                         </div>
 
 
